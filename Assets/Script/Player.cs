@@ -191,5 +191,3 @@ public class Player : MonoBehaviour
 }
 
 
-//asfahodghaeoghiqeg
-//ffjfg
