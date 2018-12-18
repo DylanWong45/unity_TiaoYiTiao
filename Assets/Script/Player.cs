@@ -189,3 +189,6 @@ public class Player : MonoBehaviour
         Camera.DOMove(transform.position + _cameraRelativePosition, 1);
     }
 }
+
+
+//asfahodghaeoghiqeg
