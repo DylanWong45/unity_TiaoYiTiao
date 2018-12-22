@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;//场景
 using UnityEngine.UI;//分数
 using DG.Tweening;//相机跟随插件
+using System;
 
 public class Player : MonoBehaviour
 {
@@ -26,7 +27,12 @@ public class Player : MonoBehaviour
     public Transform Camera;
 
     //计分板
-    public Text ScoreText;
+    public Text ScoreText;      //得分总和
+    public Text SingleScoreText;//单次得分
+
+    //飘分时是否更新位置
+    private bool _isUpdateScoreAnimation = false;
+    private float _scoreAnimationStartTime;
 
     //刚体
     private Rigidbody _rigidbody;
@@ -99,7 +105,8 @@ public class Player : MonoBehaviour
 
             //跳台恢复大小
             _currentStage.transform.DOLocalMoveY(0.25f, 0.2f);
-            _currentStage.transform.DOScale(new Vector3(1, 0.5f, 1), 0.2f);
+            _currentStage.transform.DOScale(new Vector3(1, 0.5f, 1), 0.2f);  //这里会导致盒子莫名变化成初始状态
+            //_currentStage.transform.DOScaleY(0.5f, 0.2f);
         }
         if (Input.GetKey(KeyCode.Space))
         {
@@ -111,6 +118,11 @@ public class Player : MonoBehaviour
             _currentStage.transform.localScale += new Vector3(0, -1, 0) * 0.15f * Time.deltaTime;
             _currentStage.transform.localPosition += new Vector3(0, -1, 0) * 0.15f * Time.deltaTime;
         }
+        
+        //是否显示飘分效果
+        if(_isUpdateScoreAnimation)
+            UpdateScoreAnimation();
+       
     }
 
     //小人跳跃
@@ -123,7 +135,7 @@ public class Player : MonoBehaviour
     //随机确定跳台生成方向
     void RandomDirection()
     {
-        var seed = Random.Range(0, 2);
+        var seed = UnityEngine.Random.Range(0, 2);
         if (seed == 0)
         {
             //沿x轴正方向生成
@@ -143,14 +155,14 @@ public class Player : MonoBehaviour
         //生成
         var stage = Instantiate(Stage);
         //+随机距离（最小值1.1，最大值）
-        stage.transform.position = _currentStage.transform.position + _direction * Random.Range(1.1f, MaxDistance);
+        stage.transform.position = _currentStage.transform.position + _direction * UnityEngine.Random.Range(1.1f, MaxDistance);
 
         //随机改变跳台大小
-        var randomScale = Random.Range(0.5f, 1);
+        var randomScale = UnityEngine.Random.Range(0.5f, 1);
         Stage.transform.localScale = new Vector3(randomScale, 0.5f, randomScale);
 
         //改变跳台颜色
-        stage.GetComponent<Renderer>().material.color = new Color(Random.Range(0.1f, 1), Random.Range(0.1f, 1), Random.Range(0.1f, 1));
+        stage.GetComponent<Renderer>().material.color = new Color(UnityEngine.Random.Range(0.1f, 1), UnityEngine.Random.Range(0.1f, 1), UnityEngine.Random.Range(0.1f, 1));
 
     }
 
@@ -168,7 +180,7 @@ public class Player : MonoBehaviour
             RandomDirection();
             SpawnStage();
             MoveCamera();
-
+            ShowScoreAnimation();
             //加分
             _score++;
             ScoreText.text = "分数："+_score.ToString();
@@ -180,6 +192,26 @@ public class Player : MonoBehaviour
             //重新构建场景 0为Build Settings中场景的值
             SceneManager.LoadScene(0);
         }
+    }
+
+    //显示飘分动画
+    private void ShowScoreAnimation()
+    {
+        _isUpdateScoreAnimation = true;
+        _scoreAnimationStartTime = Time.time;
+    }
+
+    //更新飘分动画
+    void UpdateScoreAnimation()
+    {
+        if (Time.time - _scoreAnimationStartTime > 1)
+            _isUpdateScoreAnimation = false;
+
+        var playerScreenPos = RectTransformUtility.WorldToScreenPoint(Camera.GetComponent<Camera>(), transform.position);
+        SingleScoreText.transform.position = playerScreenPos +
+                                             Vector2.Lerp(Vector2.zero, new Vector2(0, 200),
+                                             Time.time - _scoreAnimationStartTime);
+        SingleScoreText.color = Color.Lerp(Color.black, new Color(0, 0, 0, 0), Time.time - _scoreAnimationStartTime);
     }
 
     //移动相机
