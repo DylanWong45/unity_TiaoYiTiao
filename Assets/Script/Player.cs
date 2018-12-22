@@ -12,7 +12,7 @@ public class Player : MonoBehaviour
     public float Factor=4;
 
     //生成跳台的最大距离
-    public float MaxDistance=3;
+    public float MaxDistance=2.5f;
     //获取第一个跳台
     public GameObject Stage;
 
@@ -100,19 +100,19 @@ public class Player : MonoBehaviour
             Particle.SetActive(false);
 
             //小人恢复大小
-            Body.transform.DOScale(0.1f, 1);
-            Head.transform.DOLocalMoveY(0.29f, 0.5f);
+            Body.transform.DOScale(0.18f, 0.8f);
+            Head.transform.DOLocalMoveY(0.52f, 0.5f);
 
             //跳台恢复大小
             _currentStage.transform.DOLocalMoveY(0.25f, 0.2f);
-            _currentStage.transform.DOScale(new Vector3(1, 0.5f, 1), 0.2f);  //这里会导致盒子莫名变化成初始状态
-            //_currentStage.transform.DOScaleY(0.5f, 0.2f);
+            //_currentStage.transform.DOScale(new Vector3(1, 0.5f, 1), 0.2f);  //这里会导致盒子恢复时出现异常
+            _currentStage.transform.DOScaleY(0.5f, 0.2f);
         }
         if (Input.GetKey(KeyCode.Space))
         {
             //小人缩放
-            Body.transform.localScale += new Vector3(1, -1, 1) * 0.05f * Time.deltaTime;
-            Head.transform.localPosition += new Vector3(0, -1, 0) * 0.1f * Time.deltaTime;
+            Body.transform.localScale += new Vector3(1, -1, 1) * 0.06f * Time.deltaTime;
+            Head.transform.localPosition += new Vector3(0, -1, 0) * 0.06f * Time.deltaTime;
 
             //跳台缩放沿着轴心缩放
             _currentStage.transform.localScale += new Vector3(0, -1, 0) * 0.15f * Time.deltaTime;
@@ -152,6 +152,7 @@ public class Player : MonoBehaviour
     //生成跳台
     void SpawnStage()
     {
+        
         //生成
         var stage = Instantiate(Stage);
         //+随机距离（最小值1.1，最大值）
@@ -159,7 +160,7 @@ public class Player : MonoBehaviour
 
         //随机改变跳台大小
         var randomScale = UnityEngine.Random.Range(0.5f, 1);
-        Stage.transform.localScale = new Vector3(randomScale, 0.5f, randomScale);
+        stage.transform.localScale = new Vector3(randomScale, 0.5f, randomScale);
 
         //改变跳台颜色
         stage.GetComponent<Renderer>().material.color = new Color(UnityEngine.Random.Range(0.1f, 1), UnityEngine.Random.Range(0.1f, 1), UnityEngine.Random.Range(0.1f, 1));
@@ -183,7 +184,7 @@ public class Player : MonoBehaviour
             ShowScoreAnimation();
             //加分
             _score++;
-            ScoreText.text = "分数："+_score.ToString();
+            ScoreText.text = _score.ToString();
         }
 
         if(collision.gameObject.name=="Ground")
@@ -211,7 +212,7 @@ public class Player : MonoBehaviour
         SingleScoreText.transform.position = playerScreenPos +
                                              Vector2.Lerp(Vector2.zero, new Vector2(0, 200),
                                              Time.time - _scoreAnimationStartTime);
-        SingleScoreText.color = Color.Lerp(Color.black, new Color(0, 0, 0, 0), Time.time - _scoreAnimationStartTime);
+        SingleScoreText.color = Color.Lerp(Color.black, new Color(0, 0, 0, 0), (Time.time - _scoreAnimationStartTime)*2);
     }
 
     //移动相机
