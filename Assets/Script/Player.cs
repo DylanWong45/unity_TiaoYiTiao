@@ -72,6 +72,7 @@ public class Player : MonoBehaviour
 
         //相机相对位置=相机位置-小人位置
         _cameraRelativePosition = Camera.position - transform.position;
+
     }
 
     // Update is called once per frame
@@ -110,13 +111,18 @@ public class Player : MonoBehaviour
         }
         if (Input.GetKey(KeyCode.Space))
         {
-            //小人缩放
-            Body.transform.localScale += new Vector3(1, -1, 1) * 0.06f * Time.deltaTime;
-            Head.transform.localPosition += new Vector3(0, -1, 0) * 0.06f * Time.deltaTime;
+            //添加盒子缩放位置的限定
+            if (_currentStage.transform.localScale.y > 0.3)
+            {
+                //小人缩放
+                Body.transform.localScale += new Vector3(1, -1, 1) * 0.06f * Time.deltaTime;
+                Head.transform.localPosition += new Vector3(0, -1, 0) * 0.06f * Time.deltaTime;
 
-            //跳台缩放沿着轴心缩放
-            _currentStage.transform.localScale += new Vector3(0, -1, 0) * 0.15f * Time.deltaTime;
-            _currentStage.transform.localPosition += new Vector3(0, -1, 0) * 0.15f * Time.deltaTime;
+                //跳台缩放沿着轴心缩放
+                _currentStage.transform.localScale += new Vector3(0, -1, 0) * 0.15f * Time.deltaTime;
+                _currentStage.transform.localPosition += new Vector3(0, -1, 0) * 0.15f * Time.deltaTime;
+
+            }
         }
         
         //是否显示飘分效果
