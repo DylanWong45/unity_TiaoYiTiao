@@ -7,7 +7,7 @@ using DG.Tweening;//相机跟随插件
 using System;
 using UniRx;
 using LeanCloud;
-//
+
 
 public class Player : MonoBehaviour
 {
@@ -37,12 +37,35 @@ public class Player : MonoBehaviour
     public GameObject StartPanel;
     public Button StratButton;
     public Button ShowListButton;
+    public Button ShowLoginPanel;
+    public Button ShowRegisterPanel;
 
     //结束界面
     public GameObject SaveScorePanel;
-    public InputField NameField;
+    public Text TotalScore_S;
     public Button SaveButton;
     public Button RestartButton;
+
+    //登陆界面
+    public GameObject LoginPanel;
+    public Button ReturnButton1;
+    public Button LoginButton;
+    public InputField Username_L;
+    public InputField Password_L;
+
+
+    //注册界面
+    public GameObject RegisterPanel;
+    public Button ReturnButton2;
+    public Button RegisterButton;
+    public InputField Username_R;
+    public InputField Password_R;
+    public InputField Password2_R;
+
+    //消息
+    public GameObject Inf;
+    public Text InfText;
+    public Button InfButton;
 
     //排行榜
     public GameObject RankPanel;
@@ -71,6 +94,7 @@ public class Player : MonoBehaviour
 
     private bool _enableInput = true;
     private int _lastReward = 1;
+    private string _nowUsername;
 
     //初始化沿x轴正方向生成跳台
     Vector3 _direction = new Vector3(1, 0, 0);
@@ -95,12 +119,26 @@ public class Player : MonoBehaviour
         //相机相对位置=相机位置-小人位置
         _cameraRelativePosition = Camera.position - transform.position;
         //给保存按钮绑定事件
+        ShowLoginPanel.onClick.AddListener(OnClickShowLoginPanel);
+        ShowRegisterPanel.onClick.AddListener(OnClickShowRegisterPanel);
+
         SaveButton.onClick.AddListener(OnClickSaveButton);
         RestartButton.onClick.AddListener(OnClickRestartButton);
         RestartButton2.onClick.AddListener(OnClickRestartButton);
         ShowListButton.onClick.AddListener(OnClickShowListButton);
         StratButton.onClick.AddListener(OnClickStartButton);
 
+        ReturnButton1.onClick.AddListener(OnClickReturnButton1);
+        ReturnButton2.onClick.AddListener(OnClickReturnButton2);
+        LoginButton.onClick.AddListener(OnClickLoginButton);
+        RegisterButton.onClick.AddListener(OnClickRegisterButton);
+
+        InfButton.onClick.AddListener(() =>
+        {
+            Inf.SetActive(false);
+        });
+
+        ScoreText.gameObject.SetActive(true);
         StartPanel.SetActive(true); 
         MainThreadDispatcher.Initialize();
     }
@@ -237,8 +275,16 @@ public class Player : MonoBehaviour
             //SceneManager.LoadScene(0);
 
             //本局游戏结束，显示上传分数panle
-            SaveScorePanel.SetActive(true);
+            ShowSaveScorePanel();
+            
         }
+    }
+
+    void ShowSaveScorePanel()
+    {
+        ScoreText.gameObject.SetActive(false);
+        TotalScore_S.text = ScoreText.text;
+        SaveScorePanel.SetActive(true);
     }
 
 
@@ -269,22 +315,29 @@ public class Player : MonoBehaviour
         Camera.DOMove(transform.position + _cameraRelativePosition, 1);
     }
 
-    void OnClickStartButton()
-    {
-        StartPanel.SetActive(false);
-//        SceneManager.LoadScene(0);
-    }
-
+    //开始面板上的四个按钮 排行榜 登陆 注册 开始游戏
     void OnClickShowListButton()
     {
         StartPanel.SetActive(false);
         ShowRankPanel();
     }
+    void OnClickShowLoginPanel()
+    {
+        LoginPanel.SetActive(true);
+    }
+    void OnClickShowRegisterPanel()
+    {
+        RegisterPanel.SetActive(true);
+    }
+    void OnClickStartButton()
+    {
+        StartPanel.SetActive(false);
+    }
 
+    
     void OnClickSaveButton()
     {
-        var nickname = NameField.text;
-
+        var nickname = _nowUsername;
         AVObject gameScore = new AVObject("GameScore");
         gameScore["score"] = _score;
         gameScore["playerName"] = nickname;
@@ -302,6 +355,75 @@ public class Player : MonoBehaviour
         SceneManager.LoadScene(0);        
     }
 
+    //注册和登陆界面的返回按钮
+    void OnClickReturnButton1()
+    {
+        LoginPanel.SetActive(false);
+    }
+    void OnClickReturnButton2()
+    {
+        RegisterPanel.SetActive(false);
+    }
+
+
+    //登陆按钮
+    void OnClickLoginButton()
+    {
+        
+        var userName = Username_L.text;
+        var pwd = Password_L.text;
+        AVUser.LogInAsync(userName, pwd).ContinueWith(t =>
+        {
+            if (t.IsFaulted || t.IsCanceled)
+            {
+                MainThreadDispatcher.Send(_ =>
+                {
+                    var error = t.Exception.Message; // 登录失败，可以查看错误信息。
+                    InfText.text = error;
+                    Inf.SetActive(true);
+                }, null);
+            }
+            else
+            {
+                MainThreadDispatcher.Send(_ =>
+                {
+                    //登录成功
+                    InfText.text = "登陆成功！";
+                    Inf.SetActive(true);
+                }, null);
+            }
+        });
+        LoginPanel.SetActive(false);
+        Username_L.text = "";
+        Password_L.text = "";
+        _nowUsername = AVUser.CurrentUser.Username;
+    }
+   
+    //注册按钮
+    void OnClickRegisterButton()
+    {
+        var userName = Username_R.text;
+        var pwd = Password_R.text;
+        var pwd2 = Password2_R.text;
+        var user = new AVUser();
+        user.Username = userName;
+        user.Password = pwd;
+
+        user.SignUpAsync().ContinueWith(t =>
+        {
+            var uid = user.ObjectId;
+            MainThreadDispatcher.Send(_ =>
+            {
+                InfText.text = "注册成功！";
+                Inf.SetActive(true);
+            }, null);
+        });
+        RegisterPanel.SetActive(false);
+        Username_R.text = "";
+        Password_R.text = "";
+        Password2_R.text = "";
+    }
+       
 
     void ShowRankPanel()
     {
@@ -324,7 +446,6 @@ public class Player : MonoBehaviour
                     var item = Instantiate(RankItem);
                     item.GetComponent<Text>().text = score;
                     item.transform.SetParent(RankItem.transform.parent);
-
                 }
                 RankPanel.SetActive(true);
             }, null);
