@@ -61,6 +61,7 @@
      <Compile Include="Assets\Demigiant\DOTween\Modules\DOTweenModuleUnityVersion.cs" />
      <Compile Include="Assets\Demigiant\DOTween\Modules\DOTweenModuleUtils.cs" />
      <Compile Include="Assets\Script\Player.cs" />
+     <None Include="Assets\LeanCloud\link.xml" />
      <None Include="Assets\Demigiant\DOTween\readme.txt" />
  <Reference Include="Unity.TextMeshPro.Editor">
  <HintPath>D:/学校文件/JUMP/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
@@ -280,6 +281,21 @@
  </Reference>
  <Reference Include="DOTween">
  <HintPath>D:/学校文件/JUMP/Assets/Demigiant/DOTween/DOTween.dll</HintPath>
+ </Reference>
+ <Reference Include="AssemblyLister">
+ <HintPath>D:/学校文件/JUMP/Assets/LeanCloud/AssemblyLister.dll</HintPath>
+ </Reference>
+ <Reference Include="LeanCloud.Analytics">
+ <HintPath>D:/学校文件/JUMP/Assets/LeanCloud/LeanCloud.Analytics.dll</HintPath>
+ </Reference>
+ <Reference Include="LeanCloud.Core">
+ <HintPath>D:/学校文件/JUMP/Assets/LeanCloud/LeanCloud.Core.dll</HintPath>
+ </Reference>
+ <Reference Include="LeanCloud.Storage">
+ <HintPath>D:/学校文件/JUMP/Assets/LeanCloud/LeanCloud.Storage.dll</HintPath>
+ </Reference>
+ <Reference Include="UnityEditor.iOS.Extensions.Xcode">
+ <HintPath>D:/学校文件/JUMP/Assets/LeanCloud/UnityEditor.iOS.Extensions.Xcode.dll</HintPath>
  </Reference>
  <Reference Include="UnityEngine.Advertisements">
  <HintPath>D:/学校文件/JUMP/Library/PackageCache/com.unity.ads@2.3.1/Runtime/UnityEngine.Advertisements.dll</HintPath>
@@ -641,6 +657,14 @@
  <Reference Include="System.Xml.Serialization">
  <HintPath>D:/Unity3D/Editor/Data/NetStandard/compat/2.0.0/shims/netfx/System.Xml.Serialization.dll</HintPath>
  </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="UniRx.csproj">
+      <Project>{9DCB82B4-B434-8912-BCFC-336FE4C7138E}</Project>      <Name>UniRx</Name>    </ProjectReference>
+    <ProjectReference Include="UniRx.Async.csproj">
+      <Project>{AFEA3307-4F05-01C1-E8AF-C8EAF016FC66}</Project>      <Name>UniRx.Async</Name>    </ProjectReference>
+    <ProjectReference Include="UniRx.Async.Editor.csproj">
+      <Project>{F0B1AE2A-9D86-C6D3-0979-779ECE6496C8}</Project>      <Name>UniRx.Async.Editor</Name>    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

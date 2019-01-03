@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;//场景
 using UnityEngine.UI;//分数
 using DG.Tweening;//相机跟随插件
 using System;
+using UniRx;
+using LeanCloud;
 
 public class Player : MonoBehaviour
 {
@@ -30,6 +32,22 @@ public class Player : MonoBehaviour
     public Text ScoreText;      //得分总和
     public Text SingleScoreText;//单次得分
 
+    //开始界面
+    public GameObject StartPanel;
+    public Button StratButton;
+    public Button ShowListButton;
+
+    //结束界面
+    public GameObject SaveScorePanel;
+    public InputField NameField;
+    public Button SaveButton;
+    public Button RestartButton;
+
+    //排行榜
+    public GameObject RankPanel;
+    public GameObject RankItem;
+    public Button RestartButton2;
+
     //飘分时是否更新位置
     private bool _isUpdateScoreAnimation = false;
     private float _scoreAnimationStartTime;
@@ -49,6 +67,9 @@ public class Player : MonoBehaviour
     private Vector3 _cameraRelativePosition;
 
     private int _score;
+
+    private bool _enableInput = true;
+    private int _lastReward = 1;
 
     //初始化沿x轴正方向生成跳台
     Vector3 _direction = new Vector3(1, 0, 0);
@@ -72,56 +93,71 @@ public class Player : MonoBehaviour
 
         //相机相对位置=相机位置-小人位置
         _cameraRelativePosition = Camera.position - transform.position;
+        //给保存按钮绑定事件
+        SaveButton.onClick.AddListener(OnClickSaveButton);
+        RestartButton.onClick.AddListener(OnClickRestartButton);
+        RestartButton2.onClick.AddListener(OnClickRestartButton);
+        ShowListButton.onClick.AddListener(OnClickShowListButton);
+        StratButton.onClick.AddListener(OnClickStartButton);
 
+        StartPanel.SetActive(true); 
+        MainThreadDispatcher.Initialize();
     }
+
+   
 
     // Update is called once per frame
     void Update()
     {
-        //按下空格
-        if (Input.GetKeyDown(KeyCode.Space)) 
+        if (_enableInput)
         {
-            //此刻
-            _startTime = Time.time;
-
-            //按下空格出现粒子效果
-            Particle.SetActive(true);
-        }
-
-        //松开空格
-        if (Input.GetKeyUp(KeyCode.Space)) 
-        {
-            //时间差
-            var elapse = Time.time - _startTime;
-
-            //跳跃距离
-            OnJump(elapse);
-
-            //松开空格后隐藏粒子效果
-            Particle.SetActive(false);
-
-            //小人恢复大小
-            Body.transform.DOScale(0.18f, 0.8f);
-            Head.transform.DOLocalMoveY(0.52f, 0.5f);
-
-            //跳台恢复大小
-            _currentStage.transform.DOLocalMoveY(0.25f, 0.2f);
-            //_currentStage.transform.DOScale(new Vector3(1, 0.5f, 1), 0.2f);  //这里会导致盒子恢复时出现异常
-            _currentStage.transform.DOScaleY(0.5f, 0.2f);
-        }
-        if (Input.GetKey(KeyCode.Space))
-        {
-            //添加盒子缩放位置的限定
-            if (_currentStage.transform.localScale.y > 0.3)
+            //按下空格
+            if (Input.GetKeyDown(KeyCode.Space))
             {
-                //小人缩放
-                Body.transform.localScale += new Vector3(1, -1, 1) * 0.06f * Time.deltaTime;
-                Head.transform.localPosition += new Vector3(0, -1, 0) * 0.06f * Time.deltaTime;
+                //此刻
+                _startTime = Time.time;
 
-                //跳台缩放沿着轴心缩放
-                _currentStage.transform.localScale += new Vector3(0, -1, 0) * 0.15f * Time.deltaTime;
-                _currentStage.transform.localPosition += new Vector3(0, -1, 0) * 0.15f * Time.deltaTime;
+                //按下空格出现粒子效果
+                Particle.SetActive(true);
+            }
 
+            //松开空格
+            if (Input.GetKeyUp(KeyCode.Space))
+            {
+                //时间差
+                var elapse = Time.time - _startTime;
+
+                //跳跃距离
+                OnJump(elapse);
+
+                //松开空格后隐藏粒子效果
+                Particle.SetActive(false);
+
+                //小人恢复大小
+                Body.transform.DOScale(0.18f, 0.8f);
+                Head.transform.DOLocalMoveY(0.52f, 0.5f);
+
+                //跳台恢复大小
+                _currentStage.transform.DOLocalMoveY(0.25f, 0.2f);
+                //_currentStage.transform.DOScale(new Vector3(1, 0.5f, 1), 0.2f);  //这里会导致盒子恢复时出现异常
+                _currentStage.transform.DOScaleY(0.5f, 0.2f);
+
+               // _enableInput = false;
+            }
+            if (Input.GetKey(KeyCode.Space))
+            {
+                //添加盒子缩放位置的限定
+                if (_currentStage.transform.localScale.y > 0.3)
+                {
+                    //小人缩放
+                    Body.transform.localScale += new Vector3(1, -1, 1) * 0.06f * Time.deltaTime;
+                    Head.transform.localPosition += new Vector3(0, -1, 0) * 0.06f * Time.deltaTime;
+
+                    //跳台缩放沿着轴心缩放
+                    _currentStage.transform.localScale += new Vector3(0, -1, 0) * 0.15f * Time.deltaTime;
+                    _currentStage.transform.localPosition += new Vector3(0, -1, 0) * 0.15f * Time.deltaTime;
+
+                }
             }
         }
         
@@ -179,7 +215,7 @@ public class Player : MonoBehaviour
         //碰撞后打印碰撞体名称
         Debug.Log(collision.gameObject.name);
         //判定是否碰到跳台并且不是之前碰撞的跳台
-        if (collision.gameObject.name.Contains("Stage")&& collision.collider !=_lastCollisionCollider)
+        if (collision.gameObject.name.Contains("Stage") && collision.collider != _lastCollisionCollider)
         {
             //赋值为当前跳台
             _lastCollisionCollider = collision.collider;
@@ -193,13 +229,17 @@ public class Player : MonoBehaviour
             ScoreText.text = _score.ToString();
         }
 
-        if(collision.gameObject.name=="Ground")
+        if (collision.gameObject.name == "Ground")
         {
             //本局游戏结束,重新开始
             //重新构建场景 0为Build Settings中场景的值
-            SceneManager.LoadScene(0);
+            //SceneManager.LoadScene(0);
+
+            //本局游戏结束，显示上传分数panle
+            SaveScorePanel.SetActive(true);
         }
     }
+
 
     //显示飘分动画
     private void ShowScoreAnimation()
@@ -218,7 +258,7 @@ public class Player : MonoBehaviour
         SingleScoreText.transform.position = playerScreenPos +
                                              Vector2.Lerp(Vector2.zero, new Vector2(0, 200),
                                              Time.time - _scoreAnimationStartTime);
-        SingleScoreText.color = Color.Lerp(Color.black, new Color(0, 0, 0, 0), (Time.time - _scoreAnimationStartTime)*2);
+        SingleScoreText.color = Color.Lerp(Color.black, new Color(0, 0, 0, 0), Time.time - _scoreAnimationStartTime);
     }
 
     //移动相机
@@ -226,6 +266,68 @@ public class Player : MonoBehaviour
     {
         //DOTween相机移动 1为时间参数
         Camera.DOMove(transform.position + _cameraRelativePosition, 1);
+    }
+
+    void OnClickStartButton()
+    {
+        StartPanel.SetActive(false);
+//        SceneManager.LoadScene(0);
+    }
+
+    void OnClickShowListButton()
+    {
+        StartPanel.SetActive(false);
+        ShowRankPanel();
+    }
+
+    void OnClickSaveButton()
+    {
+        var nickname = NameField.text;
+
+        AVObject gameScore = new AVObject("GameScore");
+        gameScore["score"] = _score;
+        gameScore["playerName"] = nickname;
+        gameScore.SaveAsync().ContinueWith(_ =>
+        {
+            ShowRankPanel();
+        });
+
+        SaveScorePanel.SetActive(false);
+    }
+
+    void OnClickRestartButton()
+    {
+        StartPanel.SetActive(false);
+        SceneManager.LoadScene(0);        
+    }
+
+
+    void ShowRankPanel()
+    {
+        AVQuery<AVObject> query = new AVQuery<AVObject>("GameScore").OrderByDescending("score").Limit(10);
+        query.FindAsync().ContinueWith(t =>
+        {
+            var results = t.Result;
+            var scores = new List<string>();
+
+            foreach (var result in results)
+            {
+                var score = result["playerName"] + " : " + result["score"];
+                scores.Add(score);
+            }
+
+            MainThreadDispatcher.Send(_ =>
+            {
+               foreach (var score in scores)
+                {
+                    var item = Instantiate(RankItem);
+                    item.GetComponent<Text>().text = score;
+                    item.transform.SetParent(RankItem.transform.parent);
+
+                }
+                RankPanel.SetActive(true);
+            }, null);
+        });
     }
 }
 
