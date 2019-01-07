@@ -42,6 +42,9 @@ public class Player : MonoBehaviour
     public Button SoundsButton;
     public Text SoundsText;
 
+    //重新开始按钮
+    public Button ConstRestartButton;
+
     //开始界面
     public GameObject StartPanel;
     public Button StratButton;
@@ -169,6 +172,7 @@ public class Player : MonoBehaviour
         });
 
         SoundsButton.onClick.AddListener(OnClickSoundsButton);
+        ConstRestartButton.onClick.AddListener(OnClickRestartButton);
 
         //初始化
         Users.text = "当前用户：" + _nowUsername;
