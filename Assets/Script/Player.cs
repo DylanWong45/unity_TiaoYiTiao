@@ -38,6 +38,10 @@ public class Player : MonoBehaviour
     public Text ScoreText;      //得分总和
     public Text SingleScoreText;//单次得分
 
+    //音效控制按钮
+    public Button SoundsButton;
+    public Text SoundsText;
+
     //开始界面
     public GameObject StartPanel;
     public Button StratButton;
@@ -113,6 +117,11 @@ public class Player : MonoBehaviour
     //初始化沿x轴正方向生成跳台
     Vector3 _direction = new Vector3(1, 0, 0);
 
+    //音频
+    public AudioClip music;
+    private static bool isOnPlay = true;
+    private AudioSource _audioSource;
+
     //
     // 初始化
     //
@@ -159,15 +168,33 @@ public class Player : MonoBehaviour
             Inf.SetActive(false);
         });
 
+        SoundsButton.onClick.AddListener(OnClickSoundsButton);
+
         //初始化
         Users.text = "当前用户：" + _nowUsername;
         _enableInput = false;
         ScoreText.gameObject.SetActive(true);
         StartPanel.SetActive(true); 
         MainThreadDispatcher.Initialize();
+
+        _audioSource = this.gameObject.AddComponent<AudioSource>();
+        _audioSource.clip = music;
+
+        if (isOnPlay)
+        {
+            _audioSource.Play();
+            SoundsText.text = "音效：开";
+        }
+        else
+        {
+            _audioSource.Pause();
+            SoundsText.text = "音效：关";
+        }
+
+
     }
 
-   
+
     //
     // 更新
     //
@@ -523,6 +550,22 @@ public class Player : MonoBehaviour
         Username_R.text = "";
         Password_R.text = "";
         Password2_R.text = "";
+    }
+
+    void OnClickSoundsButton()
+    {
+        if ( isOnPlay )
+        {
+            isOnPlay = false;
+            _audioSource.Pause();
+            SoundsText.text = "音效：关";
+        }
+        else
+        {
+            isOnPlay = true;
+            _audioSource.Play();
+            SoundsText.text = "音效：开";
+        }
     }
 
     //   
